@@ -1,0 +1,59 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "my-project"
+version = "0.1.0"
+description = "Проект с ML: оценка стоимости дома (Gradio)"
+authors = [{ name = "Волосикова Мария" }]
+requires-python = ">=3.9"
+
+# Базовые зависимости — то, без чего приложение не запустится
+dependencies = [
+    "numpy>=1.26,<2",
+    "pandas>=2.0,<3",
+    "scikit-learn==1.6.1",
+    "matplotlib>=3.8,<4",
+    "gradio>=4.44,<5",
+]
+
+# Автообнаружение пакетов: не считать папками-пакетами images/, app/, perceptron*
+[tool.setuptools.packages.find]
+exclude = ["images*", "app*", "perceptron*", "tests*", "data*", "models*"]
+
+[project.optional-dependencies]
+ml = [
+    "numpy>=1.26,<2",
+    "pandas>=2.0,<3",
+    "scikit-learn==1.6.1",
+    "matplotlib>=3.8,<4",
+    "seaborn",
+    "plotly",
+]
+service = [
+    "gradio>=4.44,<5",
+    "fastapi",
+    "uvicorn[standard]",
+]
+jupyter = [
+    "jupyter",
+    "ipython",
+]
+dev = [
+    "pytest>=8.0",
+]
+all = [
+    "numpy>=1.26,<2",
+    "pandas>=2.0,<3",
+    "scikit-learn==1.6.1",
+    "matplotlib>=3.8,<4",
+    "seaborn",
+    "plotly",
+    "gradio>=4.44,<5",
+    "fastapi",
+    "uvicorn[standard]",
+    "jupyter",
+    "ipython",
+    "pytest>=8.0",
+]

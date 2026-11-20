@@ -67,6 +67,55 @@ class TestCountEven:
             pem.count_even(100, 0)
 
 
+class TestCountNumbers:
+    @pytest.mark.parametrize("min_, max_, is_odd, expected", [
+        # базовые случаи: весь диапазон
+        (0,   100, True,  50),   # нечётные: 1..99    → 50
+        (0,   100, False, 51),   # чётные:   0..100   → 51
+        (0,   0,   True,  0),    # только 0, нечётных нет
+        (0,   0,   False, 1),    # только 0, чётное есть
+        (1,   1,   True,  1),    # только 1, нечётное есть
+        (1,   1,   False, 0),    # только 1, чётных нет
+        # границы совпадают с чётностью
+        (2,   2,   False, 1),    # одно чётное
+        (2,   3,   True,  1),    # только 3
+        (2,   3,   False, 1),    # только 2
+        # отрицательные
+        (-100, 100, True,  100), # -99..99  → 100
+        (-100, 100, False, 101), # -100..100 → 101
+        (-10,  10,  True,  10),  # -9..9   → 10
+        (-10,  10,  False, 11),  # -10..10 → 11
+        # случай, когда чисел нужной чётности нет вообще
+        (5,   5,   False, 0),    # только 5, чётных нет
+        (6,   6,   True,  0),    # только 6, нечётных нет
+        # маленькие диапазоны
+        (3,   4,   True,  1),
+        (3,   4,   False, 1),
+        (10,  11,  True,  1),
+        (10,  11,  False, 1),
+    ])
+    def test_count_numbers_ok(self, min_, max_, is_odd, expected):
+        assert pem.count_numbers(min_, max_, is_odd) == expected
+
+    @pytest.mark.parametrize("min_, max_", [
+        (100, 0),
+        (10,  9),
+        (1,   -1),
+    ])
+    def test_count_numbers_invalid_range(self, min_, max_):
+        # count_numbers сам не проверяет min_ > max_,
+        # поэтому проверяем согласованность с count_odd/count_even
+        # (в g_* проверка диапазона идёт отдельно)
+        with pytest.raises(ValueError):
+            # если count_numbers не бросает — тест упадёт,
+            # что сигнализирует о несоответствии контракта
+            pem.g_arr(min_, max_, 1, True)
+
+    def test_count_numbers_invalid_range(self):
+        with pytest.raises(ValueError):
+            pem.count_numbers(100, 0, True)
+
+
 class TestG_Arr:
     @pytest.mark.parametrize("min_, max_, length, is_odd", [
         (0,    100, 10, 1),
@@ -140,6 +189,60 @@ class TestG_Ndarr:
     def test_g_ndarr_raises(self, min_, max_, length, is_odd):
         with pytest.raises(ValueError):
             pem.g_ndarr(min_, max_, length, is_odd)
+
+
+class TestG_Ndarr_Fast:
+    @pytest.mark.parametrize("min_, max_, length, is_odd", [
+        (0,    100, 10, True),
+        (-100, 100, 50, True),
+        (30,   50,  5,  True),
+        (0,    100, 10, False),
+        (-100, 100, 50, False),
+        (30,   50,  5,  False),
+    ])
+    def test_g_ndarr_fast_ok(self, min_, max_, length, is_odd):
+        result = pem.g_ndarr_fast(min_, max_, length, is_odd)
+
+        assert isinstance(result, np.ndarray)
+        assert result.shape == (length,)
+        assert np.all(result % 2 == int(is_odd))
+        assert np.all((result >= min_) & (result <= max_))
+
+    @pytest.mark.parametrize("min_, max_, length, is_odd", [
+        (0,    100, 10, True),
+        (-100, 100, 50, True),
+        (0,    100, 10, False),
+        (30,   50,  5,  False),
+    ])
+    def test_g_ndarr_fast_unique(self, min_, max_, length, is_odd):
+        result = pem.g_ndarr_fast(min_, max_, length, is_odd)
+        assert len(np.unique(result)) == length
+
+    @pytest.mark.parametrize("min_, max_, length, is_odd", [
+        (100,  0,  50, True),    # min > max
+        (-10,  10, 30, True),    # недостаточно нечётных
+        (-10,  10, 30, False),   # недостаточно чётных
+        (5,    5,  1,  False),   # единственное число чётное, нужны нечётные
+        (6,    6,  1,  True),    # единственное число нечётное, нужны чётные
+        (0,    0,  2,  False),   # чётное только одно, а нужно два
+    ])
+    def test_g_ndarr_fast_raises(self, min_, max_, length, is_odd):
+        with pytest.raises(ValueError):
+            pem.g_ndarr_fast(min_, max_, length, is_odd)
+
+    def test_g_ndarr_fast_full_range(self):
+        # граничный случай: запрашиваем ровно все числа нужной чётности
+        result = pem.g_ndarr_fast(1, 9, 5, True)   # 1,3,5,7,9
+        assert sorted(result.tolist()) == [1, 3, 5, 7, 9]
+
+    def test_g_ndarr_fast_negative_step(self):
+        # проверка с отрицательным is_odd через int()
+        result = pem.g_ndarr_fast(0, 10, 3, 0)
+        assert np.all(result % 2 == 0)
+
+    def test_g_ndarr_fast_dtype(self):
+        result = pem.g_ndarr_fast(0, 100, 5, True)
+        assert np.issubdtype(result.dtype, np.integer)
 
     
 class TestToCsv:

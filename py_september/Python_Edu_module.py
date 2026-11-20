@@ -3,7 +3,6 @@
 '''
 
 import random
-import math
 import numpy as np
 import csv
 from collections.abc import Iterable
@@ -26,7 +25,7 @@ def check(i: int):
         return i
 
 
-def count_odd(min_: int, max_: int):
+def count_odd(min_: int, max_: int) -> int:
     '''
     считает количество нечетных чисел в диапазоне
     '''
@@ -35,13 +34,28 @@ def count_odd(min_: int, max_: int):
     return (max_ + 1) // 2 - min_ // 2
 
 
-def count_even(min_: int, max_: int):
+def count_even(min_: int, max_: int) -> int:
     '''
-    считает количество нечетных чисел в диапазоне
+    считает количество четных чисел в диапазоне
     '''
     if min_ > max_:
             raise ValueError("Неправильно заданный диапазон (min_ > max_)")
     return max_ // 2 - (min_ - 1) // 2
+
+
+def count_numbers(min_: int, max_: int, is_odd: bool) -> int:
+    '''
+        считает количество четных и нечетных чисел в диапазоне
+    '''
+    if min_ > max_:
+            raise ValueError("Неправильно заданный диапазон (min_ > max_)")
+    
+    # считает начальное число диапазона
+    # пример: если число четное, а требуется нечетное, то прибавляется 1 
+    start = min_ + ((min_ % 2) != int(is_odd))
+    if start > max_:
+        return 0
+    return (max_ - start) // 2 + 1
 
 
 def g_arr(min_: int, max_: int, lenght: int, is_odd: bool) -> list[int]:
@@ -53,12 +67,8 @@ def g_arr(min_: int, max_: int, lenght: int, is_odd: bool) -> list[int]:
         raise ValueError("Неправильно заданный диапазон (min_ >= max_)")
     
     # проверка, достаточно ли в диапазоне уникальных чисел
-    if is_odd:
-        if count_odd(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
-    else:
-        if count_even(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
+    if count_numbers(min_, max_, is_odd) < lenght:
+        raise ValueError ("В диапазоне нет достаточного количества чисел")
         
     # результат - массив
     result = []
@@ -75,20 +85,19 @@ def g_arr(min_: int, max_: int, lenght: int, is_odd: bool) -> list[int]:
 def g_set(min_: int, max_: int, lenght: int, is_odd: bool) -> set[int]:
     '''
     генератор четных или нечетных (is_odd) чисел в диапазоне (min_, max_)
+    Множество (set) в Python устроено на основе хеш-таблиц (hash tables)
+    оиск за O(1): Благодаря хешам Python сразу знает, в какую ячейку памяти посмотреть
     '''
     # проверка диапазона
     if min_>max_:
         raise ValueError("Неправильно заданный диапазон (min_ >= max_)")
     
     # проверка, достаточно ли в диапазоне уникальных чисел
-    if is_odd:
-        if count_odd(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
-    else:
-        if count_even(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
+    if count_numbers(min_, max_, is_odd) < lenght:
+        raise ValueError ("В диапазоне нет достаточного количества чисел")
         
-    # результат - массив
+    # результат - множество
+    # множество в Python устроено на базе хеш-таблицы 
     result = set()
 
     # пока не будет сгенерировано достаточно уникальных чисел. set - множество уникальных чисел
@@ -105,26 +114,47 @@ def g_ndarr(min_: int, max_: int, lenght: int, is_odd: bool) -> np.array:
     генератор четных или нечетных (is_odd) чисел в диапазоне (min_, max_)
     '''
     # проверка диапазона
-    if min_>max_:
+    if min_ > max_:
         raise ValueError("Неправильно заданный диапазон (min_ >= max_)")
     
     # проверка, достаточно ли в диапазоне уникальных чисел
-    if is_odd:
-        if count_odd(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
-    else:
-        if count_even(min_, max_) < lenght:
-            raise ValueError ("В диапазоне нет достаточного количества чисел")
+    if count_numbers(min_, max_, is_odd) < lenght:
+        raise ValueError ("В диапазоне нет достаточного количества чисел")
 
   
     # результат - массив
     result = np.empty(lenght, dtype=int)
 
-    if is_odd:
+    if min_%2 != int(is_odd):
         min_ +=1
     result[:] = random.sample(range(min_, max_, 2), lenght)
 
     return result
+
+
+def g_ndarr_fast(min_, max_, lenght, is_odd):
+    '''
+        генератор четных или нечетных (is_odd) чисел в диапазоне (min_, max_)
+    '''
+    if min_ > max_:
+        raise ValueError("Неправильно заданный диапазон")
+    
+    rng = np.random.default_rng()
+  
+    total = count_numbers(min_, max_, is_odd)
+    if total < lenght:
+        raise ValueError("В диапазоне нет достаточного количества чисел")
+
+    # выбрать lenght случайных индексов из последовательности [0..total] без повторений (replace=False).
+    idx = rng.choice(total, size=lenght, replace=False)
+
+    # если нижняя граница диапазона нечетная, делаем четной и наоборот
+    if min_%2 != int(is_odd):
+        min_ +=1
+
+    # преобразовать индексы в числа
+    # 2 - шаг для четности
+    return min_ + idx * 2 
 
     
 def to_csv(filename: str, data) -> None:

@@ -1,3 +1,4 @@
+__author__ = "Volosikova"
 import Python_Edu_module as pe
 import numpy as np
 

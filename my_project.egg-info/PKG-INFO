@@ -1,0 +1,29 @@
+Metadata-Version: 2.4
+Name: my-project
+Version: 0.1.0
+Summary: Проект с ML
+Author: Волосикова Мария
+Requires-Python: >=3.9
+Requires-Dist: numpy
+Requires-Dist: pandas
+Requires-Dist: scikit-learn
+Requires-Dist: seaborn
+Requires-Dist: plotly
+Requires-Dist: fastapi
+Requires-Dist: uvicorn[standard]
+Requires-Dist: gradio
+Requires-Dist: jupyter
+Requires-Dist: ipython
+Provides-Extra: ml
+Requires-Dist: numpy; extra == "ml"
+Requires-Dist: pandas; extra == "ml"
+Requires-Dist: scikit-learn; extra == "ml"
+Requires-Dist: seaborn; extra == "ml"
+Requires-Dist: plotly; extra == "ml"
+Provides-Extra: service
+Requires-Dist: fastapi; extra == "service"
+Requires-Dist: uvicorn[standard]; extra == "service"
+Requires-Dist: gradio; extra == "service"
+Provides-Extra: jupyter
+Requires-Dist: jupyter; extra == "jupyter"
+Requires-Dist: ipython; extra == "jupyter"

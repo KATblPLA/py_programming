@@ -1,0 +1,13 @@
+.venv/
+__pycache__/
+*.pyc
+.ipynb_checkpoints/
+.env
+*.lock
+1.csvdataset/*.arff
+dataset/*.csv
+perceptron/dataset/*.arff
+perceptron/dataset/*.csv
+dataset/openml/
+*.npz
+data_cache.py
